@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken')
 const { connectDb } = require('./dbConnect')
 
 exports.createUser = (req, res) => {
@@ -26,10 +27,11 @@ exports.createUser = (req, res) => {
         userRole: 5,
       }
       // TODO: create a JWT and send back the token
+      const token = jwt.sign(user,'doNotShareYourSecret') // protect this secret 
       res.status(201).send({
         success: true,
         message: 'Account created',
-        token: user, // add this to token later
+        token
        })
     })
     .catch(err => res.status(500).send({ 
@@ -69,10 +71,11 @@ exports.loginUser = (req, res) => {
           user.password = undefined
           return user
         })
+        const token = jwt.sign(user[0],'doNotShareYourSecret') // protect this secret 
         res.send({
           success: true,
           message: 'Login successful',
-          token: users[0]
+          token
         })
       })
       .catch(err => res.status(500).send({ 
@@ -80,4 +83,27 @@ exports.loginUser = (req, res) => {
         message: err.message,
         error: err 
       }))
+}
+
+exports.getUsers = (req, res) => { // TODO: Protect this route with JWT
+  const db = connectDb()
+  db.collection('users').get()
+    .then(snapshot => {
+      const users = snapshot.docs.map(doc => {
+        let user = doc.data()
+        user.id = doc.id
+        user.password = undefined
+        return user
+      })
+      res.send({
+        success: true,
+        message: 'Users returned',
+        users
+      })
+    })
+    .catch(err => res.status(500).send({ 
+      success: false,
+      message: err.message,
+      error: err 
+    }))
 }
