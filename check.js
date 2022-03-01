@@ -1,4 +1,3 @@
-const jwt = require('jsonwebtoken')
 const { connectDb } = require('./dbConnect')
 
 exports.createUser = (req, res) => {
@@ -27,11 +26,10 @@ exports.createUser = (req, res) => {
         userRole: 5,
       }
       // TODO: create a JWT and send back the token
-      const token = jwt.sign(user,'doNotShareYourSecret') // protect this secret 
       res.status(201).send({
         success: true,
         message: 'Account created',
-        token
+        token: user, // add this to token later
        })
     })
     .catch(err => res.status(500).send({ 
@@ -71,11 +69,10 @@ exports.loginUser = (req, res) => {
           user.password = undefined
           return user
         })
-        const token = jwt.sign(user[0],'doNotShareYourSecret') // protect this secret 
         res.send({
           success: true,
           message: 'Login successful',
-          token
+          token: users[0]
         })
       })
       .catch(err => res.status(500).send({ 
@@ -83,43 +80,4 @@ exports.loginUser = (req, res) => {
         message: err.message,
         error: err 
       }))
-}
-exports.getUsers = (req, res) => { 
-    // first make sure the use sent authorization token
-    if(!req.headers.authorization){
-        return res.status(403).send({
-            success: false,
-            message: 'No authorization token found'
-        })
-    }
-
-    // TODO: Protect this route with JWT
-    const decode = jwt.verify(req.headers.authorization, 'doNotShareYourSecret')
-    console.log('NEW REQUEST BY', decode.email)
-    if(decode.userRole > 5) {
-        return res.status(401).send({
-            success: false,
-            message: 'Not authorized'
-        })
-    }
-  const db = connectDb()
-  db.collection('users').get()
-    .then(snapshot => {
-      const users = snapshot.docs.map(doc => {
-        let user = doc.data()
-        user.id = doc.id
-        user.password = undefined
-        return user
-      })
-      res.send({
-        success: true,
-        message: 'Users returned',
-        users
-      })
-    })
-    .catch(err => res.status(500).send({ 
-      success: false,
-      message: err.message,
-      error: err 
-    }))
 }
