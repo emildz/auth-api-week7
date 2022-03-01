@@ -12,11 +12,21 @@ exports.createUser = (req, res) => {
         isAdmin: false,
         userRole: 5,
     }
-    // const db = connectDb()
-    // db.collection('user').add(newUser)
-    //  .then(doc => {
+    const db = connectDb()
+    db.collection('user').add(newUser)
+     .then(doc => {
+         const user = {
+             id: doc.id,
+             email: newUser.email,
+             isAdmin: false,
+             userRole: 5
+         }
     //      //TODO: create a JWT and send back the token
-         res.status(201).send('Account Created')
-    //  })
-    //  .catch(err => res.status(500).send(err))
+        res.status(201).send({
+            success: true,
+            message: 'Account Created',
+            token: 'token goes here', // add this to token later      
+          })
+     })
+     .catch(err => res.status(500).send(err))
 }
